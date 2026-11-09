@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BTST F&amp;O Planner — Indian Market</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f17;--panel:#121826;--panel2:#182033;--line:#243049;--text:#e6ebf5;--muted:#8d9bb5;
+  --green:#22c55e;--green-bg:rgba(34,197,94,.12);--red:#ef4444;--red-bg:rgba(239,68,68,.12);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,.12);--blue:#60a5fa;--accent:#7c9cff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:15px}
+.mono{font-family:'JetBrains Mono',monospace}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 18px 60px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:6px 0 18px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#ff9933,#ffffff 50%,#138808);display:grid;place-items:center;font-weight:800;color:#0b0f17;font-size:13px}
+h1{font-size:22px;font-weight:800;letter-spacing:-.3px}
+.sub{color:var(--muted);font-size:13px}
+.clock{font-size:13px;color:var(--muted);text-align:right}
+.clock b{color:var(--text)}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600}
+.warn{background:var(--amber-bg);border:1px solid rgba(245,158,11,.35);color:#fcd34d;border-radius:10px;padding:12px 14px;font-size:13px;margin:16px 0}
+nav.tabs{display:flex;gap:6px;margin:18px 0;flex-wrap:wrap}
+nav.tabs button{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:9px 16px;border-radius:9px;font:600 14px Inter;cursor:pointer}
+nav.tabs button.on{background:var(--accent);color:#0b0f17;border-color:var(--accent)}
+.view{display:none}.view.on{display:block}
+.grid{display:grid;grid-template-columns:1.05fr 1fr;gap:18px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h2{font-size:16px;font-weight:700;margin-bottom:4px}
+.card .hint{color:var(--muted);font-size:13px;margin-bottom:14px}
+fieldset{border:none;margin-bottom:16px}
+legend{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:520px){.row3{grid-template-columns:1fr 1fr}}
+label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:4px}
+label .q{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--line);color:var(--text);font-size:10px;margin-left:4px;cursor:help}
+input,select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px 10px;border-radius:8px;font:500 14px 'JetBrains Mono',monospace}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.field{margin-bottom:10px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.btn{background:var(--accent);color:#0b0f17;border:none;padding:11px 18px;border-radius:9px;font:700 14px Inter;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.verdict{border-radius:14px;padding:20px;text-align:center;margin-bottom:14px;border:1px solid var(--line);background:var(--panel2)}
+.verdict .big{font-size:28px;font-weight:800;letter-spacing:-.5px}
+.verdict .what{font-size:14px;color:var(--muted);margin-top:4px}
+.verdict.bull{background:var(--green-bg);border-color:rgba(34,197,94,.4)}.verdict.bull .big{color:var(--green)}
+.verdict.bear{background:var(--red-bg);border-color:rgba(239,68,68,.4)}.verdict.bear .big{color:var(--red)}
+.verdict.wait{background:var(--amber-bg);border-color:rgba(245,158,11,.4)}.verdict.wait .big{color:var(--amber)}
+.meter{height:12px;border-radius:99px;background:linear-gradient(90deg,var(--red),#3a4560 50%,var(--green));position:relative;margin:16px 4px 6px}
+.meter .dot{position:absolute;top:50%;width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--bg);transform:translate(-50%,-50%);transition:left .4s}
+.meter-l{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12px}
+td.s{font-family:'JetBrains Mono',monospace;font-weight:700;text-align:center;width:44px}
+.pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--muted)}
+.plan{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.plan div{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px}
+.plan .k{font-size:11.5px;color:var(--muted)}.plan .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px}
+.notes li{margin:0 0 6px 18px;font-size:13.5px}
+.empty{color:var(--muted);text-align:center;padding:40px 10px;font-size:14px}
+.vixscale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:12px 0}
+.vixscale div{border-radius:9px;padding:10px 8px;font-size:12px;text-align:center}
+.vixscale b{display:block;font-size:14px;font-family:'JetBrains Mono',monospace}
+@media(max-width:640px){.vixscale{grid-template-columns:1fr 1fr}.plan{grid-template-columns:1fr 1fr}}
+.learn{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:800px){.learn{grid-template-columns:1fr}}
+.learn .card p{font-size:14px;color:#c9d2e3;margin-bottom:8px}
+.learn .card ul{margin-left:18px;font-size:14px;color:#c9d2e3}
+.timeline{position:relative;margin-left:10px;border-left:2px solid var(--line);padding-left:20px}
+.timeline .t{margin-bottom:18px;position:relative}
+.timeline .t:before{content:"";position:absolute;left:-27px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--accent)}
+.timeline .time{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);font-size:13px}
+.timeline p{font-size:14px;color:#c9d2e3}
+a{color:var(--blue)}
+.src a{display:block;margin:4px 0;font-size:14px}
+.log td{font-size:12.5px}
+.tag{font-size:11px;padding:2px 7px;border-radius:5px;font-weight:700}
+.tag.b{background:var(--green-bg);color:var(--green)}.tag.s{background:var(--red-bg);color:var(--red)}.tag.n{background:var(--amber-bg);color:var(--amber)}
+footer{margin-top:30px;color:var(--muted);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">
+    <div class="logo">F&amp;O</div>
+    <div>
+      <h1>BTST F&amp;O Planner</h1>
+      <div class="sub">Indian index futures &amp; options · Buy Today, Sell Tomorrow / Sell Today, Buy Tomorrow</div>
+    </div>
+  </div>
+  <div class="clock" id="clock"></div>
+</header>
+
+<div class="warn"><b>Learning tool, not advice.</b> This page scores the numbers <i>you</i> enter using common rules traders use. It cannot see the live market and it cannot predict tomorrow. Overnight F&amp;O positions can gap against you badly. SEBI's own studies found roughly 9 out of 10 individual F&amp;O traders lose money. Use 1 lot, always keep a stop-loss, and never trade money you need.</div>
+
+<nav class="tabs">
+  <button class="on" data-v="analyze">📊 Analyze today</button>
+  <button data-v="learn">📘 Learn the terms</button>
+  <button data-v="routine">⏰ Daily routine</button>
+  <button data-v="log">📒 My log</button>
+</nav>
+
+<!-- ============ ANALYZE ============ -->
+<section class="view on" id="analyze">
+<div class="grid">
+  <div class="card">
+    <h2>Enter today's numbers</h2>
+    <div class="hint">Fill these at about <b>3:00–3:20 PM</b> (before close) or in the evening. Empty boxes are skipped. Hover the <span class="q" style="display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--line);font-size:10px">?</span> for help. The "Where to find" links are in the <b>Learn</b> tab.</div>
+
+    <fieldset>
+      <legend>1 · Index</legend>
+      <div class="row">
+        <div class="field"><label>Which index?</label>
+          <select id="idx">
+            <option value="NIFTY">Nifty 50 (lot 65)</option>
+            <option value="BANKNIFTY">Bank Nifty (lot 30)</option>
+            <option value="SENSEX">Sensex (lot 20)</option>
+          </select></div>
+        <div class="field"><label>Is tomorrow this index's expiry day?<span class="q" title="Nifty weekly expiry = Tuesday. Sensex weekly = Thursday. Bank Nifty = only last Tuesday of the month. If a holiday falls on expiry, it moves to the previous trading day.">?</span></label>
+          <select id="expiry"><option value="no">No</option><option value="yes">Yes</option></select></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>2 · Today's price action</legend>
+      <div class="row">
+        <div class="field"><label>Previous day close</label><input id="prev" type="number" step="any" placeholder="e.g. 25400"></div>
+        <div class="field"><label>Today close / current price</label><input id="close" type="number" step="any" placeholder="e.g. 25560"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Today's high</label><input id="high" type="number" step="any"></div>
+        <div class="field"><label>Today's low</label><input id="low" type="number" step="any"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>3 · GIFT Nifty &amp; global cues</legend>
+      <div class="row">
+        <div class="field"><label>Nifty futures close (near month)<span class="q" title="GIFT Nifty tracks Nifty futures, so compare with futures, not spot. Find it on the NSE futures page or your broker app.">?</span></label><input id="fut" type="number" step="any"></div>
+        <div class="field"><label>GIFT Nifty now (evening / night)<span class="q" title="GIFT Nifty trades almost round the clock at NSE IX in GIFT City. Check it around 8–10 PM, or early morning before 9 AM.">?</span></label><input id="gift" type="number" step="any"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>US futures change % (Dow / Nasdaq)<span class="q" title="e.g. +0.5 or -0.8. Check Dow / Nasdaq futures in the evening.">?</span></label><input id="us" type="number" step="any" placeholder="e.g. 0.4"></div>
+        <div class="field"><label>Crude oil change %<span class="q" title="Rising crude is usually bad for India (we import oil). e.g. +2 = crude up 2%.">?</span></label><input id="crude" type="number" step="any" placeholder="e.g. -1.2"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>4 · Fear gauge — India VIX</legend>
+      <div class="row">
+        <div class="field"><label>India VIX value<span class="q" title="Below 12 = very calm, 12–16 normal, 16–20 nervous, above 20 = fear. See Learn tab.">?</span></label><input id="vix" type="number" step="any" placeholder="e.g. 13.4"></div>
+        <div class="field"><label>India VIX change % today<span class="q" title="Shown next to VIX on NSE. e.g. -4.2 means VIX fell 4.2% today.">?</span></label><input id="vixchg" type="number" step="any" placeholder="e.g. -3.5"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>5 · Option chain (OI data)</legend>
+      <div class="row3">
+        <div class="field"><label>PCR (OI)<span class="q" title="Put-Call Ratio = total put OI ÷ total call OI. Many broker apps and option-chain sites show it.">?</span></label><input id="pcr" type="number" step="any" placeholder="e.g. 1.12"></div>
+        <div class="field"><label>Max Call OI strike<span class="q" title="The strike with the highest CALL open interest. Acts like a ceiling (resistance).">?</span></label><input id="callwall" type="number" step="any" placeholder="e.g. 25700"></div>
+        <div class="field"><label>Max Put OI strike<span class="q" title="The strike with the highest PUT open interest. Acts like a floor (support).">?</span></label><input id="putwall" type="number" step="any" placeholder="e.g. 25400"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>6 · Big money — FII flows</legend>
+      <div class="row">
+        <div class="field"><label>FII cash market net (₹ crore)<span class="q" title="NSE publishes FII/DII cash data after market close. + = bought, − = sold.">?</span></label><input id="fiicash" type="number" step="any" placeholder="e.g. -1250"></div>
+        <div class="field"><label>FII index futures net change (contracts)<span class="q" title="From NSE 'participant wise OI' data: change in FII long minus short index futures today. + = added longs.">?</span></label><input id="fiifut" type="number" step="any" placeholder="e.g. 8500"></div>
+      </div>
+    </fieldset>
+
+    <div class="btns">
+      <button class="btn" id="go">Analyze BTST</button>
+      <button class="btn ghost" id="demo">Load example numbers</button>
+      <button class="btn ghost" id="clear">Clear</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="card" id="out">
+      <div class="empty">👈 Enter today's numbers and press <b>Analyze BTST</b>.<br><br>New to this? Press <b>Load example numbers</b> to see how it works.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ LEARN ============ -->
+<section class="view" id="learn">
+  <div class="learn">
+    <div class="card">
+      <h2>What is BTST / STBT?</h2>
+      <p><b>BTST = Buy Today, Sell Tomorrow.</b> You buy near today's close (3:00–3:25 PM) because you expect the market to <b>open higher</b> tomorrow, then you sell in the first 15–30 minutes.</p>
+      <p><b>STBT = Sell Today, Buy Tomorrow.</b> The opposite: you expect a <b>lower</b> open. In F&amp;O you can do this by buying a <b>Put (PE)</b> or selling futures.</p>
+      <p>Most of the profit or loss comes from the <b>opening gap</b>, which depends on what happens overnight: US markets, news and GIFT Nifty. That's why the overnight clues on this page carry so much weight.</p>
+    </div>
+
+    <div class="card">
+      <h2>India VIX: the fear gauge</h2>
+      <p>India VIX shows how big a move option traders <b>expect</b> in Nifty over the next 30 days. It does <b>not</b> say up or down, only how wild.</p>
+      <div class="vixscale">
+        <div style="background:rgba(96,165,250,.12)"><b>&lt; 12</b>Very calm. Options cheap. Small moves.</div>
+        <div style="background:var(--green-bg)"><b>12–16</b>Normal. Best for BTST.</div>
+        <div style="background:var(--amber-bg)"><b>16–20</b>Nervous. Bigger gaps. Use smaller size.</div>
+        <div style="background:var(--red-bg)"><b>20–25</b>Fear. Big gaps both ways.</div>
+        <div style="background:rgba(239,68,68,.25)"><b>&gt; 25</b>Panic. Better to skip.</div>
+      </div>
+      <p><b>Rule of thumb:</b> expected daily move ≈ Nifty × VIX ÷ 100 ÷ 19. At Nifty 25,000 and VIX 14, that's about ±185 points.</p>
+      <p><b>VIX falling while the market rises</b> is a healthy rally. <b>VIX rising sharply</b> means fear is building, so be careful with longs.</p>
+    </div>
+
+    <div class="card">
+      <h2>GIFT Nifty</h2>
+      <p>A Nifty futures contract traded at NSE IX in <b>GIFT City, Gujarat</b>, for many more hours than the Indian market (into the night). It's the best clue for <b>tomorrow's opening</b>.</p>
+      <ul>
+        <li>GIFT Nifty <b>above</b> today's Nifty futures close → likely <b>gap-up</b> open</li>
+        <li>GIFT Nifty <b>below</b> → likely <b>gap-down</b> open</li>
+        <li>Compare it with Nifty <b>futures</b>, not spot, because futures usually trade a little above spot.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>PCR: Put-Call Ratio</h2>
+      <p>PCR = total Put OI ÷ total Call OI. Big players mostly <b>sell</b> options, so lots of puts usually means sellers think the market won't fall much.</p>
+      <ul>
+        <li><b>Below 0.7</b>: bearish mood (but below 0.5 is often oversold, so a bounce is possible)</li>
+        <li><b>0.85–1.15</b>: neutral</li>
+        <li><b>1.15–1.5</b>: bullish mood</li>
+        <li><b>Above 1.6</b>: overheated, so a pullback is possible</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Option OI walls (support / resistance)</h2>
+      <p><b>Max Call OI strike</b> = where call sellers are sitting. The market often struggles to go above it, so it works like a <b>ceiling</b>.</p>
+      <p><b>Max Put OI strike</b> = where put sellers are sitting. It often works like a <b>floor</b>.</p>
+      <p>If the price closes right under the ceiling, there's little room left for a BTST long. If it closes just above the floor, a bounce is more likely.</p>
+    </div>
+
+    <div class="card">
+      <h2>FII data</h2>
+      <p>FIIs (Foreign Institutional Investors) move big money. After 3:30 PM, NSE publishes how much they bought or sold.</p>
+      <ul>
+        <li><b>FII cash net +</b> = buying Indian shares (positive)</li>
+        <li><b>FII index futures longs added</b> = betting on a rise</li>
+        <li>One day is noisy. A trend over 3–5 days matters more.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Closing strength</h2>
+      <p>Where did the index close inside today's range?</p>
+      <p><b>Near the day's high</b> means buyers stayed strong till the end, which often carries into the next morning. <b>Near the low</b> means sellers were in control.</p>
+      <p>Formula: (Close − Low) ÷ (High − Low). Above 0.8 = strong close, below 0.2 = weak close.</p>
+    </div>
+
+    <div class="card">
+      <h2>2026 contract facts</h2>
+      <ul>
+        <li><b>Nifty 50</b>: lot 65 · weekly expiry every <b>Tuesday</b>, monthly = last Tuesday</li>
+        <li><b>Bank Nifty</b>: lot 30 · <b>monthly only</b> (last Tuesday), no weekly</li>
+        <li><b>Sensex (BSE)</b>: lot 20 · weekly expiry every <b>Thursday</b></li>
+        <li>If expiry falls on a holiday, it moves to the <b>previous</b> trading day.</li>
+        <li>Lot sizes get revised from time to time, so confirm in your broker app.</li>
+      </ul>
+    </div>
+
+    <div class="card src">
+      <h2>Where to find each number</h2>
+      <a href="https://www.nseindia.com/market-data/live-equity-market" target="_blank" rel="noopener">NSE live market: Nifty close, high, low</a>
+      <a href="https://www.nseindia.com/option-chain" target="_blank" rel="noopener">NSE option chain: PCR, max Call/Put OI strikes</a>
+      <a href="https://www.nseindia.com/reports/fii-dii" target="_blank" rel="noopener">NSE FII / DII cash data</a>
+      <a href="https://www.nseindia.com/all-reports-derivatives" target="_blank" rel="noopener">NSE derivatives reports: participant-wise OI (FII futures)</a>
+      <a href="https://www.nseix.com/" target="_blank" rel="noopener">NSE IX: GIFT Nifty</a>
+      <a href="https://www.nseindia.com/resources/exchange-communication-holidays" target="_blank" rel="noopener">NSE trading holidays</a>
+      <p style="margin-top:8px;font-size:13px;color:var(--muted)">Your broker app (Zerodha, Upstox, Angel, Groww, Dhan…) usually shows VIX, PCR and the option chain on one screen.</p>
+    </div>
+
+    <div class="card">
+      <h2>Simple BTST rules</h2>
+      <ul>
+        <li>Trade only when <b>several</b> signals agree. One signal alone is not enough.</li>
+        <li>Prefer <b>next week's</b> option, not the one expiring tomorrow (it loses value fast overnight).</li>
+        <li>Buy <b>ATM or 1 strike ITM</b> options, not cheap far-OTM ones.</li>
+        <li>Exit by <b>9:30–9:45 AM</b> whether it's in profit or loss. BTST is not an investment.</li>
+        <li>Before a big event (RBI policy, Budget, election results, US Fed) the gap can go either way, so skip.</li>
+        <li>Never risk more than <b>1–2%</b> of your capital on one trade.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ROUTINE ============ -->
+<section class="view" id="routine">
+  <div class="card">
+    <h2>A BTST day, step by step (IST)</h2>
+    <div class="hint">Follow the same routine every day. Consistency matters more than any single signal.</div>
+    <div class="timeline">
+      <div class="t"><div class="time">2:45 PM</div><p>Note Nifty's price, high and low. Check India VIX and its % change. Open the option chain and note PCR and the max Call / Put OI strikes.</p></div>
+      <div class="t"><div class="time">3:00 PM</div><p>Check GIFT Nifty and US futures. Enter everything on the <b>Analyze</b> tab.</p></div>
+      <div class="t"><div class="time">3:10–3:25 PM</div><p>If the verdict is clearly Bullish or Bearish, take <b>1 lot</b> of a next-week option (CE for bullish, PE for bearish). Write down your stop-loss and target. If it says "No trade", do nothing. That's a valid decision.</p></div>
+      <div class="t"><div class="time">After 3:30 PM</div><p>NSE publishes FII/DII data later in the evening. Update the FII boxes and re-analyze to see if your view still holds.</p></div>
+      <div class="t"><div class="time">8:00–10:00 PM</div><p>Check GIFT Nifty and the US market open. If they've turned strongly against you, plan to exit at the open.</p></div>
+      <div class="t"><div class="time">Next day 8:45 AM</div><p>Check GIFT Nifty again to see the expected gap.</p></div>
+      <div class="t"><div class="time">9:15–9:45 AM</div><p><b>Exit.</b> Book profit on a gap in your favour. Cut the loss on a gap against you. Don't hope and hold.</p></div>
+      <div class="t"><div class="time">Evening</div><p>Write the result in <b>My log</b>. After 20–30 trades you'll see which signals actually worked for you.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LOG ============ -->
+<section class="view" id="log">
+  <div class="card">
+    <h2>My BTST log</h2>
+    <div class="hint">After each analysis, press "Save to log". Then record what really happened the next morning. Saved only in this browser on this device.</div>
+    <div id="logbox"></div>
+  </div>
+</section>
+
+<footer>Rules-based scoring for education only · Not SEBI-registered advice · Always verify numbers on NSE / your broker</footer>
+</div>
+
+<script>
+const LOT={NIFTY:65,BANKNIFTY:30,SENSEX:20};
+const STEP={NIFTY:50,BANKNIFTY:100,SENSEX:100};
+const NAME={NIFTY:'Nifty 50',BANKNIFTY:'Bank Nifty',SENSEX:'Sensex'};
+const $=id=>document.getElementById(id);
+const num=id=>{const v=$(id).value.trim();return v===''?null:parseFloat(v)};
+const fmt=(n,d=0)=>n.toLocaleString('en-IN',{maximumFractionDigits:d,minimumFractionDigits:d});
+let last=null;
+
+/* clock + market status */
+function tick(){
+  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  const d=now.getDay(),m=now.getHours()*60+now.getMinutes();
+  let st,col;
+  if(d===0||d===6){st='Weekend: market closed';col='var(--muted)'}
+  else if(m<555){st='Pre-open: check GIFT Nifty';col='var(--blue)'}
+  else if(m<900){st='Market open';col='var(--green)'}
+  else if(m<930){st='BTST window: 3:00–3:30 PM';col='var(--amber)'}
+  else{st='Market closed: evening check';col='var(--muted)'}
+  $('clock').innerHTML=`<b class="mono">${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST</b> · ${now.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})}<br><span style="color:${col};font-weight:600">● ${st}</span><br><span style="font-size:11px">Check NSE holiday list before trading</span>`;
+}
+tick();setInterval(tick,30000);
+
+/* tabs */
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');$(b.dataset.v).classList.add('on');
+  if(b.dataset.v==='log')renderLog();
+});
+
+/* demo */
+$('demo').onclick=()=>{
+  const ex={idx:'NIFTY',expiry:'no',prev:25380,close:25562,high:25590,low:25365,fut:25610,gift:25690,us:0.45,crude:-0.8,vix:13.2,vixchg:-4.1,pcr:1.22,callwall:25800,putwall:25500,fiicash:1340,fiifut:9200};
+  for(const k in ex)$(k).value=ex[k];
+  analyze();
+};
+$('clear').onclick=()=>{document.querySelectorAll('#analyze input').forEach(i=>i.value='');$('out').innerHTML='<div class="empty">Cleared. Enter today\'s numbers.</div>';last=null};
+$('go').onclick=analyze;
+
+function analyze(){
+  const I=$('idx').value, exp=$('expiry').value==='yes';
+  const v={prev:num('prev'),close:num('close'),high:num('high'),low:num('low'),fut:num('fut'),gift:num('gift'),us:num('us'),crude:num('crude'),vix:num('vix'),vixchg:num('vixchg'),pcr:num('pcr'),cw:num('callwall'),pw:num('putwall'),fc:num('fiicash'),ff:num('fiifut')};
+  if(v.close==null){$('out').innerHTML='<div class="empty">Please enter at least <b>Today close / current price</b>.</div>';return}
+  const F=[]; const notes=[];
+  const add=(name,val,score,max,why)=>F.push({name,val,score,max,why});
+
+  // 1 GIFT gap
+  if(v.gift!=null&&v.fut!=null){
+    const g=(v.gift-v.fut)/v.fut*100, pts=v.gift-v.fut;
+    let s=g>0.3?2:g>0.1?1:g<-0.3?-2:g<-0.1?-1:0;
+    add('GIFT Nifty gap',`${pts>=0?'+':''}${fmt(pts)} pts (${g.toFixed(2)}%)`,s,2,
+      s>0?'GIFT Nifty is trading above the futures close, so a gap-up open is likely.':s<0?'GIFT Nifty is below the futures close, so a gap-down open is likely.':'GIFT Nifty is flat, so no clear gap signal.');
+    if(I!=='NIFTY')notes.push('GIFT Nifty tracks Nifty 50. For Bank Nifty and Sensex, use it as a general market-direction clue.');
+  }
+  // 2 closing strength
+  if(v.high!=null&&v.low!=null&&v.high>v.low){
+    const cs=(v.close-v.low)/(v.high-v.low);
+    let s=cs>0.8?2:cs>0.6?1:cs<0.2?-2:cs<0.4?-1:0;
+    add('Closing strength',`${(cs*100).toFixed(0)}% of range`,s,2,
+      s>0?'Closed near the day\'s high: buyers held control till the end.':s<0?'Closed near the day\'s low: sellers were in control.':'Closed mid-range, so no strong push either way.');
+  }
+  // 3 day trend
+  if(v.prev!=null){
+    const ch=(v.close-v.prev)/v.prev*100;
+    let s=ch>0.5?1:ch<-0.5?-1:0;
+    add('Today\'s move',`${ch>=0?'+':''}${ch.toFixed(2)}%`,s,1,
+      s>0?'A strong up-day. Momentum often carries over.':s<0?'A strong down-day. Weakness often carries over.':'A small move today.');
+  }
+  // 4 global
+  if(v.us!=null){
+    let s=v.us>0.4?1:v.us<-0.4?-1:0;
+    add('US futures',`${v.us>=0?'+':''}${v.us}%`,s,1,s>0?'Positive global cue.':s<0?'Negative global cue.':'Global markets are flat.');
+  }
+  if(v.crude!=null){
+    let s=v.crude>2?-1:v.crude<-2?1:0;
+    add('Crude oil',`${v.crude>=0?'+':''}${v.crude}%`,s,1,s<0?'Crude jumped, which is negative for India (oil importer).':s>0?'Crude fell sharply, which helps India.':'Crude move is small.');
+  }
+  // 5 VIX
+  if(v.vixchg!=null){
+    let s=v.vixchg<-3?1:v.vixchg>5?-1:0;
+    add('India VIX change',`${v.vixchg>=0?'+':''}${v.vixchg}%`,s,1,
+      s>0?'Fear is cooling, which supports a rise.':s<0?'Fear is rising fast. Be careful with long positions.':'VIX is steady.');
+  }
+  // 6 PCR
+  if(v.pcr!=null){
+    let s=0,w;
+    if(v.pcr<0.6){s=-1;w='Very low PCR: bearish mood, but the market may be oversold, so a bounce is possible.'}
+    else if(v.pcr<0.85){s=-1;w='Low PCR: call writers are dominant (bearish).'}
+    else if(v.pcr<=1.15){s=0;w='Neutral PCR.'}
+    else if(v.pcr<=1.5){s=1;w='Healthy high PCR: put writers are supporting the market (bullish).'}
+    else{s=1;w='Very high PCR: bullish but overheated, so a pullback is possible.'}
+    add('PCR (OI)',v.pcr.toFixed(2),s,1,w);
+    if(v.pcr>1.6||v.pcr<0.5)notes.push('PCR is at an extreme. Extremes often reverse, so treat this signal with caution.');
+  }
+  // 7 OI walls
+  if(v.cw!=null||v.pw!=null){
+    let s=0,w='Price is between support and resistance.';
+    const dC=v.cw!=null?(v.cw-v.close)/v.close*100:null, dP=v.pw!=null?(v.close-v.pw)/v.close*100:null;
+    if(dC!=null&&dC>=0&&dC<0.35){s=-1;w=`Only ${fmt(v.cw-v.close)} pts below the call wall (${fmt(v.cw)}), so upside room is small.`}
+    else if(dP!=null&&dP>=0&&dP<0.35){s=1;w=`Just ${fmt(v.close-v.pw)} pts above the put wall (${fmt(v.pw)}): strong support below.`}
+    else if(dC!=null&&dC<0){s=1;w=`Closed ABOVE the max call OI strike ${fmt(v.cw)}: a breakout, and call writers may have to cover.`}
+    else if(dP!=null&&dP<0){s=-1;w=`Closed BELOW the max put OI strike ${fmt(v.pw)}: support broken.`}
+    add('OI walls',`${v.pw!=null?fmt(v.pw):'–'} / ${v.cw!=null?fmt(v.cw):'–'}`,s,1,w);
+  }
+  // 8 FII
+  if(v.fc!=null||v.ff!=null){
+    let s=0;
+    if(v.fc!=null)s+=v.fc>1000?1:v.fc<-1000?-1:0;
+    if(v.ff!=null)s+=v.ff>10000?1:v.ff<-10000?-1:0;
+    add('FII flows',`Cash ${v.fc!=null?'₹'+fmt(v.fc)+' cr':'–'} · Fut ${v.ff!=null?fmt(v.ff):'–'}`,s,2,
+      s>0?'Foreign money is coming in.':s<0?'Foreign money is going out.':'No strong FII signal today.');
+  }
+
+  if(F.length<3){$('out').innerHTML='<div class="empty">Enter at least 3 groups of data (e.g. high/low, GIFT Nifty, PCR) for a meaningful result.</div>';return}
+
+  const total=F.reduce((a,f)=>a+f.score,0), max=F.reduce((a,f)=>a+f.max,0);
+  const ratio=total/max; // -1..1
+  const agree=F.filter(f=>Math.sign(f.score)===Math.sign(total)&&f.score!==0).length;
+  const against=F.filter(f=>f.score!==0&&Math.sign(f.score)!==Math.sign(total)).length;
+
+  let bias='wait',big='NO TRADE',what='Signals are mixed. Staying out is also a position.';
+  const th=0.3;
+  const vix=v.vix;
+  if(ratio>=th){bias='bull';big='BULLISH · BTST';what=`Buy ${NAME[I]} CE or futures near close, sell tomorrow morning`}
+  else if(ratio<=-th){bias='bear';big='BEARISH · STBT';what=`Buy ${NAME[I]} PE or sell futures near close, exit tomorrow morning`}
+  if(vix!=null&&vix>25){bias='wait';big='NO TRADE · VIX TOO HIGH';what='Panic levels. Gaps can be huge either way.'}
+
+  // GIFT conflict
+  const gf=F.find(f=>f.name==='GIFT Nifty gap');
+  if(gf&&gf.score!==0&&bias!=='wait'&&Math.sign(gf.score)!==Math.sign(total))notes.push('⚠ GIFT Nifty disagrees with the other signals. GIFT is the most direct clue for the opening, so consider skipping or reducing size.');
+  if(exp)notes.push('Tomorrow is expiry for this index. Do NOT buy options expiring tomorrow overnight, because time decay is extreme. Use next week\'s or the monthly contract.');
+  if(vix!=null){
+    if(vix<12)notes.push(`VIX ${vix}: very calm. Gaps will likely be small, so keep targets modest.`);
+    else if(vix<=16)notes.push(`VIX ${vix}: normal range, good conditions for BTST.`);
+    else if(vix<=20)notes.push(`VIX ${vix}: nervous market. Gaps can be bigger, so trade 1 lot only.`);
+    else if(vix<=25)notes.push(`VIX ${vix}: fear zone. Option premiums are expensive and gaps are large. Consider skipping.`);
+  }
+  notes.push('Check the news before entering: RBI policy, US Fed, Budget, elections or big results tonight can override every signal here.');
+
+  // plan
+  let planHTML='';
+  if(bias!=='wait'){
+    const vx=vix||14;
+    const em=v.close*vx/100/Math.sqrt(365);
+    const dir=bias==='bull'?1:-1;
+    const tgt=v.close+dir*em*0.6, sl=v.close-dir*em*0.5;
+    const atm=Math.round(v.close/STEP[I])*STEP[I];
+    const itm=bias==='bull'?atm-STEP[I]:atm+STEP[I];
+    const lot=LOT[I];
+    const optMove=em*0.6*0.55, optRisk=em*0.5*0.55;
+    planHTML=`
+      <h2 style="margin-top:6px">Example trade plan · 1 lot</h2>
+      <div class="plan">
+        <div><div class="k">Option to consider</div><div class="v">${fmt(atm)} ${bias==='bull'?'CE':'PE'}</div><div class="k">or ${fmt(itm)} ${bias==='bull'?'CE':'PE'} (ITM)</div></div>
+        <div><div class="k">Index target</div><div class="v pos">${fmt(tgt)}</div><div class="k">${dir>0?'+':'−'}${fmt(em*0.6)} pts</div></div>
+        <div><div class="k">Index stop-loss</div><div class="v neg">${fmt(sl)}</div><div class="k">${dir>0?'−':'+'}${fmt(em*0.5)} pts</div></div>
+        <div><div class="k">Expected 1-day move (from VIX)</div><div class="v">±${fmt(em)}</div><div class="k">pts</div></div>
+        <div><div class="k">Futures P&amp;L at target / SL</div><div class="v"><span class="pos">+₹${fmt(em*0.6*lot)}</span></div><div class="k neg">−₹${fmt(em*0.5*lot)}</div></div>
+        <div><div class="k">ATM option (approx)</div><div class="v"><span class="pos">+₹${fmt(optMove*lot)}</span></div><div class="k neg">−₹${fmt(optRisk*lot)} at SL</div></div>
+      </div>
+      <div class="hint" style="margin:0">Lot size ${lot}. Option figures assume about 0.55 delta and ignore overnight time decay and premium changes, so treat them as rough. Choose a <b>next-week expiry</b>. Exit by 9:30–9:45 AM.</div>`;
+  }
+
+  const pos=((ratio+1)/2*100).toFixed(1);
+  const rows=F.map(f=>`<tr><td><b>${f.name}</b><br><span class="mono" style="font-size:12px;color:var(--muted)">${f.val}</span></td><td class="s ${f.score>0?'pos':f.score<0?'neg':'neu'}">${f.score>0?'+':''}${f.score}</td><td style="color:#c9d2e3">${f.why}</td></tr>`).join('');
+
+  $('out').innerHTML=`
+    <div class="verdict ${bias}">
+      <div class="big">${big}</div>
+      <div class="what">${what}</div>
+      <div class="meter"><div class="dot" style="left:${pos}%"></div></div>
+      <div class="meter-l"><span>Strong bearish</span><span>Neutral</span><span>Strong bullish</span></div>
+      <div style="margin-top:10px;font-size:13px">Score <b class="mono">${total>0?'+':''}${total}</b> of ±${max} · ${agree} signal(s) agree · ${against} against</div>
+    </div>
+    <h2>Why: signal by signal</h2>
+    <table><thead><tr><th>Signal</th><th>Score</th><th>Meaning</th></tr></thead><tbody>${rows}</tbody></table>
+    ${planHTML}
+    <h2 style="margin-top:16px">Things to keep in mind</h2>
+    <ul class="notes">${notes.map(n=>`<li>${n}</li>`).join('')}</ul>
+    <div class="btns" style="margin-top:12px"><button class="btn ghost" id="savelog">Save to log</button></div>`;
+
+  last={date:new Date().toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'2-digit'}),idx:I,close:v.close,score:total,max,bias,vix:v.vix,result:''};
+  $('savelog').onclick=()=>{const L=getLog();L.unshift(last);setLog(L);$('savelog').textContent='Saved ✓';$('savelog').disabled=true};
+}
+
+/* log (browser storage, optional) */
+function getLog(){try{return JSON.parse(localStorage.getItem('btstlog')||'[]')}catch(e){return window._mem||[]}}
+function setLog(L){try{localStorage.setItem('btstlog',JSON.stringify(L))}catch(e){window._mem=L}}
+function renderLog(){
+  const L=getLog();
+  if(!L.length){$('logbox').innerHTML='<div class="empty">No entries yet. Analyze a day and press "Save to log".</div>';return}
+  const done=L.filter(e=>e.result==='win'||e.result==='loss'), wins=done.filter(e=>e.result==='win').length;
+  $('logbox').innerHTML=`
+    <div style="margin-bottom:10px;font-size:14px">Trades recorded: <b>${done.length}</b> · Wins: <b class="pos">${wins}</b> · Losses: <b class="neg">${done.length-wins}</b>${done.length?` · Win rate <b>${(wins/done.length*100).toFixed(0)}%</b>`:''}</div>
+    <table class="log"><thead><tr><th>Date</th><th>Index</th><th>Close</th><th>Call</th><th>VIX</th><th>Next-day result</th><th></th></tr></thead><tbody>
+    ${L.map((e,i)=>`<tr><td>${e.date}</td><td>${e.idx}</td><td class="mono">${fmt(e.close)}</td>
+      <td><span class="tag ${e.bias==='bull'?'b':e.bias==='bear'?'s':'n'}">${e.bias==='bull'?'BTST':e.bias==='bear'?'STBT':'SKIP'} ${e.score>0?'+':''}${e.score}</span></td>
+      <td class="mono">${e.vix??'–'}</td>
+      <td><select data-i="${i}" class="res" style="padding:4px;font-size:12px"><option value="">—</option><option value="win" ${e.result==='win'?'selected':''}>Worked ✓</option><option value="loss" ${e.result==='loss'?'selected':''}>Failed ✗</option><option value="skip" ${e.result==='skip'?'selected':''}>Didn't trade</option></select></td>
+      <td><button data-d="${i}" class="btn ghost del" style="padding:4px 8px;font-size:12px">✕</button></td></tr>`).join('')}
+    </tbody></table>`;
+  document.querySelectorAll('.res').forEach(s=>s.onchange=()=>{const L=getLog();L[s.dataset.i].result=s.value;setLog(L);renderLog()});
+  document.querySelectorAll('.del').forEach(b=>b.onclick=()=>{const L=getLog();L.splice(b.dataset.d,1);setLog(L);renderLog()});
+}
+</script>
+</body>
+</html>
