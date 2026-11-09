@@ -112,11 +112,10 @@ footer{margin-top:30px;color:var(--muted);font-size:12px;text-align:center}
 <section class="view on" id="analyze">
 <div class="grid">
   <div class="card">
-    <h2>Enter today's numbers</h2>
-    <div class="hint">Fill these at about <b>3:00–3:20 PM</b> (before close) or in the evening. Empty boxes are skipped. Hover the <span class="q" style="display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--line);font-size:10px">?</span> for help. The "Where to find" links are in the <b>Learn</b> tab.</div>
+    <h2>Get today's BTST signal</h2>
+    <div class="hint">Pick the index and press <b>Get BTST signal</b>. Prices, India VIX, US futures and crude are filled in automatically. Best time: <b>3:00–3:20 PM</b>.</div>
 
     <fieldset>
-      <legend>1 · Index</legend>
       <div class="row">
         <div class="field"><label>Which index?</label>
           <select id="idx">
@@ -124,10 +123,19 @@ footer{margin-top:30px;color:var(--muted);font-size:12px;text-align:center}
             <option value="BANKNIFTY">Bank Nifty (lot 30)</option>
             <option value="SENSEX">Sensex (lot 20)</option>
           </select></div>
-        <div class="field"><label>Is tomorrow this index's expiry day?<span class="q" title="Nifty weekly expiry = Tuesday. Sensex weekly = Thursday. Bank Nifty = only last Tuesday of the month. If a holiday falls on expiry, it moves to the previous trading day.">?</span></label>
-          <select id="expiry"><option value="no">No</option><option value="yes">Yes</option></select></div>
+        <div class="field"><label>Is next trading day this index's expiry?<span class="q" title="Auto = worked out from the weekday. Nifty weekly expiry = Tuesday, Sensex = Thursday, Bank Nifty = last Tuesday of the month. Holidays are NOT counted, so change it by hand if a holiday shifts expiry.">?</span></label>
+          <select id="expiry"><option value="auto">Auto</option><option value="no">No</option><option value="yes">Yes</option></select>
+          <div id="expAuto" style="font-size:11.5px;color:var(--muted);margin-top:4px"></div></div>
       </div>
     </fieldset>
+
+    <div class="btns" style="margin-bottom:12px">
+      <button class="btn" id="auto" style="flex:1;font-size:16px;padding:14px">⚡ Get BTST signal</button>
+    </div>
+    <div id="status" style="font-size:12.5px;color:var(--muted);margin-bottom:14px"></div>
+
+    <details id="dataBox" style="border-top:1px solid var(--line);padding-top:12px">
+      <summary style="cursor:pointer;font-weight:600;font-size:14px;margin-bottom:12px">Show / edit the data used <span style="color:var(--muted);font-weight:400">(optional: add GIFT Nifty, PCR, FII for better accuracy)</span></summary>
 
     <fieldset>
       <legend>2 · Today's price action</legend>
@@ -179,15 +187,16 @@ footer{margin-top:30px;color:var(--muted);font-size:12px;text-align:center}
     </fieldset>
 
     <div class="btns">
-      <button class="btn" id="go">Analyze BTST</button>
+      <button class="btn ghost" id="go">Re-analyze with my edits</button>
       <button class="btn ghost" id="demo">Load example numbers</button>
       <button class="btn ghost" id="clear">Clear</button>
     </div>
+    </details>
   </div>
 
   <div>
     <div class="card" id="out">
-      <div class="empty">👈 Enter today's numbers and press <b>Analyze BTST</b>.<br><br>New to this? Press <b>Load example numbers</b> to see how it works.</div>
+      <div class="empty">👈 Pick the index and press <b>⚡ Get BTST signal</b>.</div>
     </div>
   </div>
 </div>
@@ -329,6 +338,10 @@ footer{margin-top:30px;color:var(--muted);font-size:12px;text-align:center}
 </div>
 
 <script>
+/* ===== PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE (ends with /exec) ===== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbym8xT90mgFTnlCNPooOa4qBLHFNs-p09yIFj-9hj4BKU5ng0vl2Z993NUKmmAHqdnelA/exec';
+/* ========================================================================== */
+const YSYM={NIFTY:'^NSEI',BANKNIFTY:'^NSEBANK',SENSEX:'^BSESN'};
 const LOT={NIFTY:65,BANKNIFTY:30,SENSEX:20};
 const STEP={NIFTY:50,BANKNIFTY:100,SENSEX:100};
 const NAME={NIFTY:'Nifty 50',BANKNIFTY:'Bank Nifty',SENSEX:'Sensex'};
@@ -368,16 +381,73 @@ $('demo').onclick=()=>{
 $('clear').onclick=()=>{document.querySelectorAll('#analyze input').forEach(i=>i.value='');$('out').innerHTML='<div class="empty">Cleared. Enter today\'s numbers.</div>';last=null};
 $('go').onclick=analyze;
 
+/* ---- auto expiry (weekday based, holidays not counted) ---- */
+function istNow(){return new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}))}
+function nextTradingDay(){
+  const d=istNow();
+  // after 3:30 PM, or before market, "next" = following weekday
+  d.setDate(d.getDate()+1);
+  while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);
+  return d;
+}
+function autoExpiry(I){
+  const n=nextTradingDay(), wd=n.getDay();
+  if(I==='NIFTY')return wd===2;
+  if(I==='SENSEX')return wd===4;
+  if(I==='BANKNIFTY'){const t=new Date(n);t.setDate(t.getDate()+7);return wd===2&&t.getMonth()!==n.getMonth()}
+  return false;
+}
+function isExpiry(){const v=$('expiry').value;return v==='auto'?autoExpiry($('idx').value):v==='yes'}
+function showExp(){
+  const n=nextTradingDay();
+  $('expAuto').textContent=$('expiry').value==='auto'
+    ?`Next weekday: ${n.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})} → ${autoExpiry($('idx').value)?'Expiry':'Not expiry'} (holidays not counted)`:'';
+}
+$('idx').onchange=showExp;$('expiry').onchange=showExp;showExp();
+
+/* ---- one-click auto data ---- */
+const setv=(id,val)=>{if(val!=null&&!isNaN(val))$(id).value=val};
+async function autoRun(){
+  if(!API_URL){
+    $('status').innerHTML='<span style="color:var(--amber)">⚠ Auto data is not connected yet. Paste your Google Apps Script URL into <b>API_URL</b> in index.html. Until then, open "Show / edit the data used" and type the numbers.</span>';
+    $('dataBox').open=true;return;
+  }
+  const btn=$('auto');btn.disabled=true;btn.textContent='⏳ Fetching market data…';
+  $('status').textContent='';
+  try{
+    const r=await fetch(API_URL+(API_URL.includes('?')?'&':'?')+'t='+Date.now());
+    const d=await r.json();
+    const D=d.data||{}, I=$('idx').value, x=D[YSYM[I]];
+    if(!x||x.error)throw new Error((x&&x.error)||'No index data');
+    setv('close',x.close);setv('prev',x.prevClose);setv('high',x.high);setv('low',x.low);
+    const vx=D['^INDIAVIX'];
+    if(vx&&!vx.error){setv('vix',vx.close);setv('vixchg',vx.changePct)}
+    const es=D['ES=F'],nq=D['NQ=F'];
+    const us=[es,nq].filter(z=>z&&!z.error).map(z=>z.changePct);
+    if(us.length)setv('us',+(us.reduce((a,b)=>a+b,0)/us.length).toFixed(2));
+    const cl=D['CL=F'];if(cl&&!cl.error)setv('crude',cl.changePct);
+    const t=x.time?new Date(x.time).toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit'}):'';
+    $('status').innerHTML=`✅ Data loaded · ${NAME[I]} ${fmt(x.close,2)} ${t?'at '+t+' IST':''} · Source: Yahoo Finance (can be ~15 min delayed). GIFT Nifty, PCR &amp; FII are not automatic. Add them under "Show / edit" for a stronger signal.`;
+    analyze();
+  }catch(e){
+    $('status').innerHTML=`<span style="color:var(--red)">❌ Could not fetch data (${e.message}). Check the Apps Script deployment, or type the numbers under "Show / edit".</span>`;
+    $('dataBox').open=true;
+  }finally{btn.disabled=false;btn.textContent='⚡ Get BTST signal'}
+}
+$('auto').onclick=autoRun;
+
 function analyze(){
-  const I=$('idx').value, exp=$('expiry').value==='yes';
+  const I=$('idx').value, exp=isExpiry();
   const v={prev:num('prev'),close:num('close'),high:num('high'),low:num('low'),fut:num('fut'),gift:num('gift'),us:num('us'),crude:num('crude'),vix:num('vix'),vixchg:num('vixchg'),pcr:num('pcr'),cw:num('callwall'),pw:num('putwall'),fc:num('fiicash'),ff:num('fiifut')};
   if(v.close==null){$('out').innerHTML='<div class="empty">Please enter at least <b>Today close / current price</b>.</div>';return}
   const F=[]; const notes=[];
   const add=(name,val,score,max,why)=>F.push({name,val,score,max,why});
 
   // 1 GIFT gap
-  if(v.gift!=null&&v.fut!=null){
-    const g=(v.gift-v.fut)/v.fut*100, pts=v.gift-v.fut;
+  if(v.gift!=null&&(v.fut!=null||I==='NIFTY')){
+    const base=v.fut!=null?v.fut:v.close;
+    if(v.fut==null)notes.push('GIFT Nifty was compared with Nifty spot (futures close not entered). Futures usually trade a little above spot, so a small gap-up reading may be exaggerated.');
+    const g=(v.gift-base)/base*100, pts=v.gift-base;
     let s=g>0.3?2:g>0.1?1:g<-0.3?-2:g<-0.1?-1:0;
     add('GIFT Nifty gap',`${pts>=0?'+':''}${fmt(pts)} pts (${g.toFixed(2)}%)`,s,2,
       s>0?'GIFT Nifty is trading above the futures close, so a gap-up open is likely.':s<0?'GIFT Nifty is below the futures close, so a gap-down open is likely.':'GIFT Nifty is flat, so no clear gap signal.');
