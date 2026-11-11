@@ -83,6 +83,9 @@ a{color:var(--blue)}
 .log td{font-size:12.5px}
 .tag{font-size:11px;padding:2px 7px;border-radius:5px;font-weight:700}
 .tag.b{background:var(--green-bg);color:var(--green)}.tag.s{background:var(--red-bg);color:var(--red)}.tag.n{background:var(--amber-bg);color:var(--amber)}
+.ticket{background:var(--panel2);border:1px solid var(--accent);border-radius:12px;padding:14px;margin:14px 0}
+.ticket td{padding:7px 6px}
+.ticket td:first-child{color:var(--muted);width:42%}
 footer{margin-top:30px;color:var(--muted);font-size:12px;text-align:center}
 </style>
 </head>
@@ -549,6 +552,7 @@ function analyze(){
     const itm=bias==='bull'?atm-STEP[I]:atm+STEP[I];
     const lot=LOT[I];
     const optMove=em*0.6*0.55, optRisk=em*0.5*0.55;
+    window._plan={I,bias,lot,atm,itm,tgtPts:em*0.6,slPts:em*0.5,exp};
     planHTML=`
       <h2 style="margin-top:6px">Example trade plan · 1 lot</h2>
       <div class="plan">
@@ -558,6 +562,19 @@ function analyze(){
         <div><div class="k">Expected 1-day move (from VIX)</div><div class="v">±${fmt(em)}</div><div class="k">pts</div></div>
         <div><div class="k">Futures P&amp;L at target / SL</div><div class="v"><span class="pos">+₹${fmt(em*0.6*lot)}</span></div><div class="k neg">−₹${fmt(em*0.5*lot)}</div></div>
         <div><div class="k">ATM option (approx)</div><div class="v"><span class="pos">+₹${fmt(optMove*lot)}</span></div><div class="k neg">−₹${fmt(optRisk*lot)} at SL</div></div>
+      </div>
+      <div class="ticket">
+        <h2 style="margin-bottom:4px">🧾 Order ticket: prices to type in your broker</h2>
+        <div class="hint" style="margin-bottom:10px">Open the option chain in your broker, find the strike below, and type its <b>LTP</b> (last price) here.</div>
+        <div class="row">
+          <div class="field"><label>Strike</label>
+            <select id="tkStrike">
+              <option value="atm">${fmt(atm)} ${bias==='bull'?'CE':'PE'} (ATM)</option>
+              <option value="itm">${fmt(itm)} ${bias==='bull'?'CE':'PE'} (1 strike ITM)</option>
+            </select></div>
+          <div class="field"><label>Option LTP now (₹)</label><input id="tkLtp" type="number" step="0.05" placeholder="e.g. 725.05"></div>
+        </div>
+        <div id="tkOut"></div>
       </div>
       <div class="hint" style="margin:0">Lot size ${lot}. Option figures assume about 0.55 delta and ignore overnight time decay and premium changes, so treat them as rough. Choose a <b>next-week expiry</b>. Exit by 9:30–9:45 AM.</div>`;
   }
@@ -580,8 +597,39 @@ function analyze(){
     <ul class="notes">${notes.map(n=>`<li>${n}</li>`).join('')}</ul>
     <div class="btns" style="margin-top:12px"><button class="btn ghost" id="savelog">Save to log</button></div>`;
 
+  if(bias!=='wait'&&$('tkLtp')){$('tkLtp').oninput=renderTicket;$('tkStrike').onchange=renderTicket}
   last={date:new Date().toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'2-digit'}),idx:I,close:v.close,score:total,max,bias,vix:v.vix,result:''};
   $('savelog').onclick=()=>{const L=getLog();L.unshift(last);setLog(L);$('savelog').textContent='Saved ✓';$('savelog').disabled=true};
+}
+
+/* order ticket: index SL/target -> option premium levels */
+const tick05=n=>Math.max(0.05,Math.round(n*20)/20);
+function renderTicket(){
+  const P=window._plan, ltp=parseFloat($('tkLtp').value);
+  if(!P||!(ltp>0)){$('tkOut').innerHTML='';return}
+  const itm=$('tkStrike').value==='itm';
+  const strike=itm?P.itm:P.atm, delta=itm?0.62:0.52, side=P.bias==='bull'?'CE':'PE';
+  const buy=tick05(ltp);
+  const tgt=tick05(ltp+P.tgtPts*delta);
+  const slTrig=tick05(Math.max(ltp*0.5,ltp-P.slPts*delta)); // never risk more than half the premium
+  const slLim=tick05(slTrig*0.97);                           // ~3% below trigger so it fills on a fast fall
+  const risk=(buy-slTrig)*P.lot, reward=(tgt-buy)*P.lot;
+  const name=`${P.I} ${fmt(strike)} ${side}`;
+  const txt=`${name} | BUY ${P.lot} qty (1 lot) | Limit ${buy.toFixed(2)} | SL trigger ${slTrig.toFixed(2)} | SL price ${slLim.toFixed(2)} | Target ${tgt.toFixed(2)}`;
+  $('tkOut').innerHTML=`
+    <table style="margin-top:4px">
+      <tr><td>Instrument</td><td class="mono"><b>${name}</b> <span style="color:var(--muted)">${P.I==='BANKNIFTY'?'(monthly expiry)':'(next-week expiry)'}</span></td></tr>
+      <tr><td>Quantity</td><td class="mono"><b>${P.lot}</b> (1 lot) · Product: <b>Normal / NRML</b> (not Intraday)</td></tr>
+      <tr><td>Buy · Limit price</td><td class="mono"><b>₹${buy.toFixed(2)}</b></td></tr>
+      <tr><td>SL trigger</td><td class="mono neg"><b>₹${slTrig.toFixed(2)}</b></td></tr>
+      <tr><td>SL price (limit)</td><td class="mono neg"><b>₹${slLim.toFixed(2)}</b> <span style="color:var(--muted)">a little below the trigger so it fills on a gap</span></td></tr>
+      <tr><td>Target (take profit)</td><td class="mono pos"><b>₹${tgt.toFixed(2)}</b></td></tr>
+      <tr><td>Risk / Reward</td><td class="mono"><span class="neg">−₹${fmt(risk)}</span> / <span class="pos">+₹${fmt(reward)}</span> · 1 : ${(reward/risk).toFixed(1)}</td></tr>
+    </table>
+    ${P.exp?'<div class="hint" style="color:var(--amber);margin-top:8px">⚠ Next trading day is expiry. Pick the NEXT expiry in the option chain, not tomorrow\'s.</div>':''}
+    <div class="btns" style="margin-top:10px"><button class="btn ghost" id="tkCopy">📋 Copy order details</button></div>
+    <div class="hint" style="margin-top:8px">The SL is placed now, at entry. Exit the rest at the open next morning (9:15–9:45) even if neither SL nor target is hit. Prices are estimates (delta ≈ ${delta}); premiums can also move with VIX and time decay.</div>`;
+  $('tkCopy').onclick=async()=>{try{await navigator.clipboard.writeText(txt);$('tkCopy').textContent='Copied ✓'}catch(e){$('tkCopy').textContent='Copy blocked: select the table text instead'}};
 }
 
 /* log (browser storage, optional) */
